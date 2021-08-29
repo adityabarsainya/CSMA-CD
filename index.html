@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html ng-app>
+	<head>
+		<script type="text/javascript" src="csma.js"></script>
+		<script type="text/javascript" src="jquery.js"></script>
+		<title>CSMA</title>
+
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+		
+		<script type='text/javascript'>
+			$(document).ready(function() {
+
+				//alert('To send a packet, click the sender and then the receiver')
+
+				con = $('#notifications')
+
+				devices = []		
+
+				source = null
+				destination = null
+
+				first = true
+
+				function getDeviceFromId(id) {
+					for (var i = 0; i < devices.length; i++) {
+						if (devices[i].id == id)
+							return devices[i]
+					}
+					return null
+				}
+
+				$('.station').click(function() {
+					if (hasPacketPassedThrough(getDeviceFromId($(this).attr('id')).distance)) {
+						alert('Station ' + $(this).attr('id') + ' cannot transmit as it has sensed another signal')
+					} else {
+						$(this).addClass('selected')
+						if (first)
+							source = $(this)
+						else
+							destination = $(this)
+						first = !first
+					}
+				})
+
+				$('#push').click(function() {
+					sendPacket(getDeviceFromId(source.attr('id')), getDeviceFromId(destination.attr('id')))
+					$('.selected').removeClass('selected')
+				})
+
+				$('#tick').click(function() {
+					tick()
+					$('#time').text(elapsedTime)
+				})
+
+				$('.distance').change(function() {
+					var id = $(this).attr('id')
+					var value = $(this).val()
+					$('div#' + id).css('margin-left', value * 5 + 'px')
+					$('label#' + id).append(value + '')
+				})
+
+				$('#controls').submit(function(e) {
+					e.preventDefault()
+					var sliders = $(this).children('input.distance')
+					var cumulative = 0
+					for (var i = 0; i < sliders.length; i++) {
+						cumulative += parseInt($(sliders[i]).val())
+						devices.push({id: $(sliders[i]).attr('id'), distance: cumulative})
+					}
+					$(this).hide()
+					$('.notifications').show()
+				})
+			})
+		</script>
+		<style type='text/css'>
+			#container {
+				width: 100%;
+				text-align: center;
+			}
+			* {
+				margin: 0;
+			}
+			html, body {
+				height: 100%;
+			}
+			#container {
+				min-height: 100%;
+				height: auto !important; /* This line and the next line are not necessary unless you need IE6 support */
+				height: 100%;
+				margin: 0 auto -155px; /* the bottom margin is the negative value of the footer's height */
+			}
+			.footer, .push {
+				height: 155px; /* .push must be the same height as .footer */
+				text-align: center;
+			}
+
+			.notifications {
+				display: none;
+			}
+
+			#notifications {
+				display: none;
+				border: 1px solid #333;
+				max-height: 300px;
+				overflow-y: scroll;
+				text-align: left;
+				padding: 10px;
+				overflow-x: hidden;
+			}
+
+			.selected {
+				background: black;
+				color: white;
+			}
+
+			.station {
+				border: 1px solid #333;
+				cursor: pointer;
+				display: inline-block;
+				padding: 10px;
+				margin-left: {{distance}}px;
+			}
+
+			#stations {
+				height: 100px;
+			}
+
+			input[type='range'] {
+				display: inline-block;
+				width: 200px;
+				margin: auto auto;
+				text-align: center;
+			}
+
+		</style>
+	</head>
+	
+	<body background="dc1.jpg">
+		<div id='container'>
+			<font color="gray" <B>><h1>Carrier Sensing Multiple Access - A Simulation</h1><</B></font>
+			<br />
+			
+			<div id='stations'>
+				<div class="station" id="1">
+					1
+				</div>
+				<div class="station" id="2">
+					2
+				</div>
+				<div class="station" id="3">
+					3
+				</div>
+				<div class="station" id="4">
+					4
+				</div>
+				<div class="station" id="5">
+					5
+				</div>
+				<div class="station" id="6">
+					6
+				</div>
+				<br /><br />
+				<button id='push' class='notifications'>Add to current clock tick</button>
+			</div>
+			<form id='controls'>
+				<label id="1"></label>
+				<input type="range" class="distance" name="points" id="1" value="3" min="1" max="10">
+				<label id="2"></label>
+				<input type="range" class="distance" name="points" id="2" value="3" min="1" max="10">
+				<label id="3"></label>
+				<input type="range" class="distance" name="points" id="3" value="3" min="1" max="10">
+				<label id="4"></label>
+				<input type="range" class="distance" name="points" id="4" value="3" min="1" max="10">
+				<label id="5"></label>
+				<input type="range" class="distance" name="points" id="5" value="3" min="1" max="10">
+				<label id="6"></label>
+				<input type="range" class="distance" name="points" id="6" value="3" min="1" max="10">
+				<input type='submit' value="Submit">
+				<font color="gray"><h3><B>Set distance by dragging the button</B></h3></font>
+			</form>
+			
+			<div id='notifications' class='notifications'>
+				
+			</div>
+			<div class='push'></div>
+			
+		</div>
+		<div class='footer notifications'>
+			<button id='tick'>Tick</button><br/>
+			<h2><span id='time'>0</span> ms elapsed</h2>
+		</div>
+	</body>
+</html>
